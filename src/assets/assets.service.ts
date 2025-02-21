@@ -1,26 +1,31 @@
 import { Injectable } from '@nestjs/common';
 import { CreateAssetDto } from './dto/create-asset.dto';
-import { UpdateAssetDto } from './dto/update-asset.dto';
+import { InjectModel } from '@nestjs/mongoose';
+import { Asset } from './entities/asset.entity';
+import { Model } from 'mongoose';
 
 @Injectable()
 export class AssetsService {
+  constructor(@InjectModel(Asset.name) private assetSchemma: Model<Asset>) {}
+
   create(createAssetDto: CreateAssetDto) {
-    return 'This action adds a new asset';
+    return this.assetSchemma.create(createAssetDto);
   }
 
   findAll() {
-    return `This action returns all assets`;
+    return this.assetSchemma.find();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} asset`;
+  findOne(symbol: string) {
+    return this.assetSchemma.findOne({ symbol });
   }
 
+  /* TODO: This method will be implemented soon
   update(id: number, updateAssetDto: UpdateAssetDto) {
     return `This action updates a #${id} asset`;
   }
 
   remove(id: number) {
     return `This action removes a #${id} asset`;
-  }
+  }*/
 }
