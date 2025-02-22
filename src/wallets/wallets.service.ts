@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { InjectConnection, InjectModel } from '@nestjs/mongoose';
+import mongoose, { Model } from 'mongoose';
 
 import { Wallet } from './entities/wallet.entity';
 import { WalletAsset } from './entities/wallet-asset.entity';
@@ -13,6 +13,7 @@ export class WalletsService {
     @InjectModel(Wallet.name) private walletSchemma: Model<Wallet>,
     @InjectModel(WalletAsset.name)
     private walletAssetSchemma: Model<WalletAsset>,
+    @InjectConnection() private connection: mongoose.Connection,
   ) {}
 
   create(createWalletDto: CreateWalletDto) {
@@ -24,7 +25,12 @@ export class WalletsService {
   }
 
   findOne(id: string) {
-    return this.walletSchemma.findById(id);
+    return this.walletSchemma.findById(id).populate([
+      {
+        path: 'assets', //walletasset
+        populate: ['asset'],
+      },
+    ]);
   }
 
   /* TODO: This method will be implemented soon
@@ -36,7 +42,41 @@ export class WalletsService {
     return `This action removes a #${id} wallet`;
   }*/
 
-  createWalletAsset(createWalletAssetDto: CreateWalletAssetDto) {
-    return this.walletAssetSchemma.create(createWalletAssetDto);
+  async createWalletAsset(createWalletAssetDto: CreateWalletAssetDto) {
+    const session = await this.connection.startSession();
+
+    await session.startTransaction();
+
+    try {
+      const docs = await this.walletAssetSchemma.create(
+        [
+          {
+            wallet: createWalletAssetDto.walletId,
+            asset: createWalletAssetDto.assetId,
+            shares: createWalletAssetDto.shares,
+          },
+        ],
+        { session },
+      );
+
+      const walletAsset = docs[0];
+
+      await this.walletSchemma.updateOne(
+        { _id: createWalletAssetDto.walletId },
+        {
+          $push: { assets: walletAsset._id },
+        },
+        { session },
+      );
+
+      await session.commitTransaction();
+      return walletAsset;
+    } catch (e) {
+      console.error(e);
+      await session.abortTransaction();
+      throw e;
+    } finally {
+      await session.endSession();
+    }
   }
 }
