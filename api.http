@@ -10,23 +10,21 @@ Content-Type: application/json
   "image": "AMZN.png"
 }
 ###
-@assetId = {{ createAsset.response.body._id }}
-@assetSymbol = {{ createAsset.response.body.symbol }}
+@assetId = {{createAsset.response.body._id}}
+@assetSymbol = {{createAsset.response.body.symbol}}
 ###
 GET http://localhost:3000/assets
 ###
 GET http://localhost:3000/assets/{{assetSymbol}}
-
 ###
 # @name createWallet
 POST http://localhost:3000/wallets
 ###
-@walletId = {{ createWallet.response.body._id }}
+@walletId = {{createWallet.response.body._id}}
 ###
 GET http://localhost:3000/wallets
 ###
 GET http://localhost:3000/wallets/{{walletId}}
-
 ###
 POST http://localhost:3000/wallets/{{walletId}}/assets
 Content-Type: application/json
@@ -36,3 +34,15 @@ Content-Type: application/json
   "shares": 100
 }
 ###
+POST http://localhost:3000/orders
+Content-Type: application/json
+
+{
+    "walletId": "{{walletId}}",
+    "assetId": "{{assetId}}",
+    "shares": 10,
+    "price": 100,
+    "type": "BUY"
+}
+###
+GET http://localhost:3000/orders?walletId={{walletId}}
