@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import crypto from 'crypto';
 import { HydratedDocument } from 'mongoose';
+import crypto from 'crypto';
 
 export type AssetDocument = HydratedDocument<Asset>;
 @Schema({ timestamps: true })
@@ -20,9 +20,9 @@ export class Asset {
   @Prop()
   price: number;
 
-  createAt!: Date;
+  createdAt!: Date;
 
-  updateAt!: Date;
+  updatedAt!: Date;
 }
 
 export const AssetSchema = SchemaFactory.createForClass(Asset);
